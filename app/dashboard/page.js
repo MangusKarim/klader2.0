@@ -213,6 +213,44 @@ export default function DashboardPage() {
 
       </div>
 
+      {/* Per Person Profit Share Breakdown */}
+      <div className="bg-white p-6 rounded-3xl border border-slate-50 shadow-sm glass-card">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h3 className="font-display font-semibold text-base text-slate-800">Partner Profit Distribution</h3>
+            <p className="text-xs text-slate-400 font-medium">Net Profit divided by partner ownership percentage share.</p>
+          </div>
+          <span className="text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1">
+            {charts.partnerOwnerships.length} Active Partners
+          </span>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {charts.partnerOwnerships.map((partner) => (
+            <div key={partner.name} className="p-4 bg-slate-50/40 rounded-2xl border border-slate-100/50 flex flex-col justify-between hover:bg-slate-50 transition-colors">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Partner</span>
+                  <p className="text-sm font-semibold text-slate-800">{partner.name}</p>
+                </div>
+                <span className="text-[9px] font-bold text-slate-500 bg-white px-2 py-0.5 border border-slate-100 rounded-full">
+                  {partner.percentage}% Share
+                </span>
+              </div>
+              <div className="mt-6 border-t border-slate-100/60 pt-3">
+                <span className="text-[9px] font-semibold text-slate-400 block mb-0.5">Calculated Net Profit Share</span>
+                <span className={`text-lg font-display font-bold ${partner.profitShare >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                  {formatBDT(partner.profitShare)}
+                </span>
+              </div>
+            </div>
+          ))}
+          {charts.partnerOwnerships.length === 0 && (
+            <div className="col-span-full text-center py-6 text-xs text-slate-400">No partner ownership data recorded.</div>
+          )}
+        </div>
+      </div>
+
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
