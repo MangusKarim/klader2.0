@@ -45,6 +45,16 @@
       "deviceInfo": "System"
     }
   ],
+  "categories": [
+    "Punjabi",
+    "Saree",
+    "Kurti",
+    "Polo",
+    "Sherwani",
+    "Pant",
+    "T-Shirt",
+    "Shoe"
+  ],
   "settings": {
     "companyName": "Klader",
     "currency": "BDT",

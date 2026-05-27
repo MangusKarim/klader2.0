@@ -16,6 +16,14 @@ export default function InventoryPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Category management states
+  const [categoriesList, setCategoriesList] = useState(['Punjabi', 'Saree', 'Kurti', 'Polo', 'Sherwani', 'Pant', 'T-Shirt', 'Shoe']);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [showCategoriesModal, setShowCategoriesModal] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [categoryError, setCategoryError] = useState('');
+  const [categorySubmitting, setCategorySubmitting] = useState(false);
   
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState('');
@@ -62,8 +70,30 @@ export default function InventoryPage() {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+      const res = await fetch('/api/categories');
+      const data = await res.json();
+      if (res.ok) {
+        setCategoriesList(data.categories || []);
+        // Also update initial category of formData if it's not set
+        if (data.categories && data.categories.length > 0) {
+          setFormData(prev => ({ ...prev, category: prev.category || data.categories[0] }));
+        }
+      } else {
+        console.error('Failed to load categories');
+      }
+    } catch (e) {
+      console.error('Network error fetching categories:', e);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
     
     // Check if query parameters have search terms (redirected search)
     if (typeof window !== 'undefined') {
@@ -75,6 +105,15 @@ export default function InventoryPage() {
 
   const formatBDT = (amount) => {
     return `৳${parseFloat(amount || 0).toLocaleString('en-BD', { maximumFractionDigits: 0 })}`;
+  };
+
+  // Open Add Modal Helper
+  const handleOpenAddModal = () => {
+    setFormData(prev => ({
+      ...prev,
+      category: categoriesList[0] || 'Punjabi'
+    }));
+    setShowAddModal(true);
   };
 
   // Add Product
@@ -90,7 +129,7 @@ export default function InventoryPage() {
       if (res.ok) {
         setShowAddModal(false);
         setFormData({
-          name: '', sku: '', category: 'Punjabi', color: '', size: 'L',
+          name: '', sku: '', category: categoriesList[0] || 'Punjabi', color: '', size: 'L',
           buyingPrice: '', sellingPrice: '', stockQuantity: '', supplierName: ''
         });
         fetchProducts();
@@ -99,6 +138,53 @@ export default function InventoryPage() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // Add Product Category
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+    setCategorySubmitting(true);
+    setCategoryError('');
+    try {
+      const res = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newCategoryName })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setNewCategoryName('');
+        await fetchCategories();
+      } else {
+        setCategoryError(data.error || 'Failed to add category.');
+      }
+    } catch (err) {
+      console.error(err);
+      setCategoryError('Network connection error.');
+    } finally {
+      setCategorySubmitting(false);
+    }
+  };
+
+  // Delete Product Category
+  const handleDeleteCategory = async (name) => {
+    if (!confirm(`Are you sure you want to delete the category "${name}"?`)) return;
+    setCategoryError('');
+    try {
+      const res = await fetch(`/api/categories?name=${encodeURIComponent(name)}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (res.ok) {
+        await fetchCategories();
+      } else {
+        setCategoryError(data.error || 'Failed to delete category.');
+      }
+    } catch (err) {
+      console.error(err);
+      setCategoryError('Network connection error.');
     }
   };
 
@@ -219,7 +305,7 @@ export default function InventoryPage() {
   const totalItemsCount = products.reduce((sum, p) => sum + p.stockQuantity, 0);
 
   // Categories list
-  const categories = ['All', ...new Set(products.map(p => p.category))];
+  const categories = ['All', ...new Set([...categoriesList, ...products.map(p => p.category)])];
 
   return (
     <div className="space-y-8">
@@ -233,6 +319,19 @@ export default function InventoryPage() {
         <div className="flex items-center gap-2">
           {user.role === 'admin' && (
             <button 
+              onClick={() => {
+                setCategoryError('');
+                setShowCategoriesModal(true);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-100 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer shadow-sm"
+            >
+              <Tag size={14} className="text-slate-400" />
+              <span>Manage Categories</span>
+            </button>
+          )}
+
+          {user.role === 'admin' && (
+            <button 
               onClick={() => setShowPartnerModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-100 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer shadow-sm"
             >
@@ -243,7 +342,7 @@ export default function InventoryPage() {
           
           {(user.role === 'admin' || user.role === 'staff' || user.permissions?.salesAccess) && (
             <button 
-              onClick={() => setShowAddModal(true)}
+              onClick={handleOpenAddModal}
               className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-klader-burgundy to-klader-crimson text-white rounded-xl text-xs font-semibold hover:shadow-lg hover:shadow-klader-burgundy/10 cursor-pointer transition-all"
             >
               <Plus size={14} />
@@ -441,12 +540,10 @@ export default function InventoryPage() {
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Category</label>
                   <select value={formData.category} onChange={e=>setFormData({...formData, category: e.target.value})} className="w-full p-2.5 border border-slate-100 rounded-xl text-sm bg-white focus:outline-none">
-                    <option value="Punjabi">Punjabi</option>
-                    <option value="Saree">Saree</option>
-                    <option value="Kurti">Kurti</option>
-                    <option value="Polo">Polo Shirt</option>
-                    <option value="Sherwani">Sherwani</option>
-                    <option value="Others">Others</option>
+                    {categoriesList.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                    {categoriesList.length === 0 && <option value="Punjabi">Punjabi</option>}
                   </select>
                 </div>
               </div>
@@ -505,12 +602,10 @@ export default function InventoryPage() {
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Category</label>
                   <select value={editFormData.category} onChange={e=>setEditFormData({...editFormData, category: e.target.value})} className="w-full p-2.5 border border-slate-100 rounded-xl text-sm bg-white focus:outline-none">
-                    <option value="Punjabi">Punjabi</option>
-                    <option value="Saree">Saree</option>
-                    <option value="Kurti">Kurti</option>
-                    <option value="Polo">Polo Shirt</option>
-                    <option value="Sherwani">Sherwani</option>
-                    <option value="Others">Others</option>
+                    {categoriesList.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                    {categoriesList.length === 0 && <option value="Punjabi">Punjabi</option>}
                   </select>
                 </div>
               </div>
@@ -614,6 +709,82 @@ export default function InventoryPage() {
                 <button type="submit" className="px-4 py-2 bg-klader-burgundy text-white rounded-xl text-xs font-semibold cursor-pointer">Save Partner Account</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Manage Categories Modal */}
+      {showCategoriesModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 max-h-[85vh] flex flex-col">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+              <h3 className="font-display font-semibold text-lg text-slate-800">Manage Product Categories</h3>
+              <button 
+                onClick={() => setShowCategoriesModal(false)}
+                className="text-slate-400 hover:text-slate-600 font-semibold cursor-pointer text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Error message */}
+            {categoryError && (
+              <div className="mb-4 p-3 bg-red-50 text-red-800 border border-red-100 rounded-xl text-xs flex items-start gap-2 animate-shake">
+                <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+                <span>{categoryError}</span>
+              </div>
+            )}
+
+            {/* Add Category Form */}
+            <form onSubmit={handleAddCategory} className="mb-6 flex gap-2">
+              <div className="relative flex-1">
+                <input 
+                  type="text" 
+                  placeholder="New category name (e.g. Pant)..." 
+                  value={newCategoryName} 
+                  onChange={e => setNewCategoryName(e.target.value)} 
+                  disabled={categorySubmitting}
+                  className="w-full px-3 py-2 border border-slate-100 rounded-xl text-xs focus:outline-none focus:border-klader-burgundy" 
+                  required 
+                />
+              </div>
+              <button 
+                type="submit" 
+                disabled={categorySubmitting}
+                className="flex items-center gap-1.5 px-4 py-2 bg-klader-burgundy text-white rounded-xl text-xs font-semibold hover:bg-klader-burgundy/90 cursor-pointer disabled:opacity-50 transition-colors"
+              >
+                {categorySubmitting ? 'Adding...' : 'Add'}
+              </button>
+            </form>
+
+            <div className="flex-1 overflow-y-auto mb-4 min-h-[200px] border border-slate-50 rounded-2xl p-2 bg-slate-50/30">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2 px-2">Active Categories</span>
+              {categoriesLoading && categoriesList.length === 0 ? (
+                <div className="text-center py-8 text-slate-400 text-xs">Loading categories...</div>
+              ) : categoriesList.length === 0 ? (
+                <div className="text-center py-8 text-slate-400 text-xs">No categories added yet.</div>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {categoriesList.map(cat => (
+                    <div key={cat} className="flex justify-between items-center py-2 px-2 hover:bg-white rounded-xl transition-all group">
+                      <span className="text-xs font-semibold text-slate-700">{cat}</span>
+                      <button 
+                        type="button"
+                        onClick={() => handleDeleteCategory(cat)}
+                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all cursor-pointer"
+                        title={`Delete ${cat}`}
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="text-[10px] text-slate-400 border-t border-slate-50 pt-3">
+              <span className="font-semibold text-amber-600">Note:</span> Categories currently assigned to active products in your inventory cannot be deleted.
+            </div>
           </div>
         </div>
       )}
