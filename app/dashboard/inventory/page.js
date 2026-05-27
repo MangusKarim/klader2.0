@@ -35,11 +35,14 @@ export default function InventoryPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPartnerModal, setShowPartnerModal] = useState(false); // Quick Admin Partner Shortcut
 
-  // Forms
-  const [formData, setFormData] = useState({
-    name: '', sku: '', category: 'Punjabi', color: '', size: 'L',
-    buyingPrice: '', sellingPrice: '', stockQuantity: '', supplierName: ''
+  // Forms & Multi-Variant States
+  const [baseProductInfo, setBaseProductInfo] = useState({
+    name: '', sku: '', category: 'Punjabi', supplierName: '', sellingPrice: ''
   });
+
+  const [variants, setVariants] = useState([
+    { color: '', size: 'L', stockQuantity: '', buyingPrice: '', sellingPrice: '', sku: '', customSku: false }
+  ]);
 
   const [editFormData, setEditFormData] = useState({
     id: '', name: '', sku: '', category: 'Punjabi', color: '', size: 'L',
@@ -77,9 +80,9 @@ export default function InventoryPage() {
       const data = await res.json();
       if (res.ok) {
         setCategoriesList(data.categories || []);
-        // Also update initial category of formData if it's not set
+        // Also update initial category of baseProductInfo if it's not set
         if (data.categories && data.categories.length > 0) {
-          setFormData(prev => ({ ...prev, category: prev.category || data.categories[0] }));
+          setBaseProductInfo(prev => ({ ...prev, category: prev.category || data.categories[0] }));
         }
       } else {
         console.error('Failed to load categories');
@@ -109,35 +112,177 @@ export default function InventoryPage() {
 
   // Open Add Modal Helper
   const handleOpenAddModal = () => {
-    setFormData(prev => ({
-      ...prev,
-      category: categoriesList[0] || 'Punjabi'
-    }));
+    setBaseProductInfo({
+      name: '',
+      sku: '',
+      category: categoriesList[0] || 'Punjabi',
+      supplierName: '',
+      sellingPrice: ''
+    });
+    setVariants([
+      { color: '', size: 'L', stockQuantity: '', buyingPrice: '', sellingPrice: '', sku: '', customSku: false }
+    ]);
     setShowAddModal(true);
   };
 
-  // Add Product
+  // Helper to generate dynamic variant SKU
+  const getGeneratedSku = (baseSku, color, size, index) => {
+    if (!baseSku) return '';
+    const cleanColor = color ? color.trim().toUpperCase().replace(/[^A-Z0-9]/g, '') : '';
+    const cleanSize = size ? size.trim().toUpperCase().replace(/[^A-Z0-9]/g, '') : '';
+    
+    if (!cleanColor && !cleanSize) {
+      return `${baseSku}-${index + 1}`;
+    }
+    
+    let parts = [baseSku];
+    if (cleanColor) parts.push(cleanColor);
+    if (cleanSize) parts.push(cleanSize);
+    return parts.join('-');
+  };
+
+  // Helper to update individual variant field
+  const updateVariantField = (index, field, value) => {
+    setVariants(prev => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      
+      // If color or size is being updated, auto-generate sku if it's not custom
+      if (field === 'color' || field === 'size') {
+        if (!next[index].customSku) {
+          const colorVal = field === 'color' ? value : next[index].color;
+          const sizeVal = field === 'size' ? value : next[index].size;
+          next[index].sku = getGeneratedSku(baseProductInfo.sku, colorVal, sizeVal, index);
+        }
+      }
+      
+      if (field === 'sku') {
+        next[index].customSku = true; // User manually edited it
+      }
+      
+      return next;
+    });
+  };
+
+  // Helper to update base SKU and refresh non-custom variant SKUs
+  const handleBaseSkuChange = (val) => {
+    setBaseProductInfo(prev => ({ ...prev, sku: val }));
+    setVariants(currVariants => 
+      currVariants.map((v, idx) => {
+        if (!v.customSku) {
+          return { ...v, sku: getGeneratedSku(val, v.color, v.size, idx) };
+        }
+        return v;
+      })
+    );
+  };
+
+  // Helper to update base selling price and default it to empty variants
+  const handleBaseSellingPriceChange = (val) => {
+    setBaseProductInfo(prev => ({ ...prev, sellingPrice: val }));
+    setVariants(currVariants => 
+      currVariants.map(v => {
+        if (!v.sellingPrice) {
+          return { ...v, sellingPrice: val };
+        }
+        return v;
+      })
+    );
+  };
+
+  // Helper to append a variant row
+  const handleAddVariantRow = () => {
+    setVariants(prev => [
+      ...prev,
+      {
+        color: '',
+        size: 'L',
+        stockQuantity: '',
+        buyingPrice: '',
+        sellingPrice: baseProductInfo.sellingPrice || '',
+        sku: getGeneratedSku(baseProductInfo.sku, '', 'L', prev.length),
+        customSku: false
+      }
+    ]);
+  };
+
+  // Helper to remove a variant row
+  const handleRemoveVariantRow = (index) => {
+    if (variants.length === 1) return;
+    setVariants(prev => prev.filter((_, idx) => idx !== index));
+  };
+
+  // Add Product (Processes parallel variant creations)
   const handleAddProduct = async (e) => {
     e.preventDefault();
-    try {
-      const res = await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setShowAddModal(false);
-        setFormData({
-          name: '', sku: '', category: categoriesList[0] || 'Punjabi', color: '', size: 'L',
-          buyingPrice: '', sellingPrice: '', stockQuantity: '', supplierName: ''
-        });
-        fetchProducts();
-      } else {
-        alert(data.error || 'Failed to add product');
+
+    if (!baseProductInfo.name || !baseProductInfo.sku || !baseProductInfo.category) {
+      alert('Product Name, Base SKU, and Category are required.');
+      return;
+    }
+
+    // Validation
+    for (let i = 0; i < variants.length; i++) {
+      const v = variants[i];
+      if (!v.sku) {
+        alert(`SKU is required for all variants (row ${i + 1}).`);
+        return;
       }
+      if (v.buyingPrice === '' || v.sellingPrice === '' || v.stockQuantity === '') {
+        alert(`Buying price, Selling price, and Qty are required for all variants (row ${i + 1}).`);
+        return;
+      }
+    }
+
+    try {
+      setLoading(true);
+      
+      const promises = variants.map(v => {
+        const productPayload = {
+          name: baseProductInfo.name,
+          sku: v.sku,
+          category: baseProductInfo.category,
+          color: v.color || '',
+          size: v.size || '',
+          buyingPrice: parseFloat(v.buyingPrice),
+          sellingPrice: parseFloat(v.sellingPrice),
+          stockQuantity: parseInt(v.stockQuantity),
+          supplierName: baseProductInfo.supplierName || ''
+        };
+        
+        return fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productPayload)
+        });
+      });
+      
+      const responses = await Promise.all(promises);
+      let successCount = 0;
+      let errors = [];
+      
+      for (let i = 0; i < responses.length; i++) {
+        const res = responses[i];
+        const data = await res.json();
+        if (res.ok) {
+          successCount++;
+        } else {
+          errors.push(`Variant ${variants[i].sku}: ${data.error || 'Unknown error'}`);
+        }
+      }
+      
+      if (errors.length > 0) {
+        alert(`Added ${successCount} variants successfully.\nFailed variants:\n${errors.join('\n')}`);
+      } else {
+        setShowAddModal(false);
+      }
+      
+      fetchProducts();
     } catch (err) {
       console.error(err);
+      alert('An error occurred while saving products.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -525,59 +670,201 @@ export default function InventoryPage() {
       {/* 1. Add Product Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
-            <h3 className="font-display font-semibold text-lg border-b border-slate-50 pb-3 mb-4">Add Product to Inventory</h3>
-            <form onSubmit={handleAddProduct} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Product Title</label>
-                <input type="text" placeholder="e.g. Royal Navy Velvet Punjabi" value={formData.name} onChange={e=>setFormData({...formData, name: e.target.value})} className="w-full p-2.5 border border-slate-100 rounded-xl text-sm focus:outline-none" required />
+          <div className="bg-white rounded-3xl p-6 max-w-4xl w-full shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <h3 className="font-display font-semibold text-lg border-b border-slate-50 pb-3 mb-4">Add Product (with Variants)</h3>
+            <form onSubmit={handleAddProduct} className="space-y-6">
+              
+              {/* Section 1: General Info */}
+              <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50 space-y-4">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">1. General Information (Shared)</span>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Product Title</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Royal Navy Velvet Punjabi" 
+                      value={baseProductInfo.name} 
+                      onChange={e=>setBaseProductInfo({...baseProductInfo, name: e.target.value})} 
+                      className="w-full p-2.5 bg-white border border-slate-100 rounded-xl text-xs focus:outline-none" 
+                      required 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Category</label>
+                    <select 
+                      value={baseProductInfo.category} 
+                      onChange={e=>setBaseProductInfo({...baseProductInfo, category: e.target.value})} 
+                      className="w-full p-2.5 bg-white border border-slate-100 rounded-xl text-xs focus:outline-none"
+                    >
+                      {categoriesList.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                      {categoriesList.length === 0 && <option value="Punjabi">Punjabi</option>}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Base SKU Code</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. PNJ-VEL-001" 
+                      value={baseProductInfo.sku} 
+                      onChange={e=>handleBaseSkuChange(e.target.value)} 
+                      className="w-full p-2.5 bg-white border border-slate-100 rounded-xl text-xs focus:outline-none font-semibold" 
+                      required 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Base Selling Price (Default)</label>
+                    <input 
+                      type="number" 
+                      placeholder="e.g. 1500" 
+                      value={baseProductInfo.sellingPrice} 
+                      onChange={e=>handleBaseSellingPriceChange(e.target.value)} 
+                      className="w-full p-2.5 bg-white border border-slate-100 rounded-xl text-xs focus:outline-none font-semibold text-klader-burgundy" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Supplier Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Dhaka Fabrics" 
+                      value={baseProductInfo.supplierName} 
+                      onChange={e=>setBaseProductInfo({...baseProductInfo, supplierName: e.target.value})} 
+                      className="w-full p-2.5 bg-white border border-slate-100 rounded-xl text-xs focus:outline-none" 
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">SKU Code</label>
-                  <input type="text" placeholder="PNJ-VEL-001" value={formData.sku} onChange={e=>setFormData({...formData, sku: e.target.value})} className="w-full p-2.5 border border-slate-100 rounded-xl text-sm focus:outline-none" required />
+
+              {/* Section 2: Variants */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">2. Product Variants (Add separate sizes & colors)</span>
+                  <button 
+                    type="button" 
+                    onClick={handleAddVariantRow} 
+                    className="flex items-center gap-1 px-3 py-1.5 bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-100 rounded-xl text-[11px] font-bold transition-all cursor-pointer"
+                  >
+                    <Plus size={12} className="text-slate-400" />
+                    <span>Add Variant</span>
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Category</label>
-                  <select value={formData.category} onChange={e=>setFormData({...formData, category: e.target.value})} className="w-full p-2.5 border border-slate-100 rounded-xl text-sm bg-white focus:outline-none">
-                    {categoriesList.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                    {categoriesList.length === 0 && <option value="Punjabi">Punjabi</option>}
-                  </select>
+
+                <div className="border border-slate-100 rounded-2xl overflow-hidden bg-white">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs min-w-[700px]">
+                      <thead>
+                        <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-400 font-semibold">
+                          <th className="p-3 w-[15%]">Color</th>
+                          <th className="p-3 w-[12%]">Size</th>
+                          <th className="p-3 w-[12%]">Stock Qty</th>
+                          <th className="p-3 w-[15%]">Buying (Cost)</th>
+                          <th className="p-3 w-[15%]">Selling (Retail)</th>
+                          <th className="p-3 w-[25%]">Variant SKU</th>
+                          <th className="p-3 w-[6%] text-center"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {variants.map((v, index) => (
+                          <tr key={index} className="hover:bg-slate-50/20">
+                            <td className="p-2">
+                              <input 
+                                type="text" 
+                                placeholder="Black / Blue" 
+                                value={v.color} 
+                                onChange={e=>updateVariantField(index, 'color', e.target.value)} 
+                                className="w-full p-2 border border-slate-100 rounded-lg text-xs focus:outline-none" 
+                                required
+                              />
+                            </td>
+                            <td className="p-2">
+                              <input 
+                                type="text" 
+                                placeholder="M / L / Free" 
+                                value={v.size} 
+                                onChange={e=>updateVariantField(index, 'size', e.target.value)} 
+                                className="w-full p-2 border border-slate-100 rounded-lg text-xs focus:outline-none font-semibold text-slate-700" 
+                                required
+                              />
+                            </td>
+                            <td className="p-2">
+                              <input 
+                                type="number" 
+                                placeholder="Qty" 
+                                value={v.stockQuantity} 
+                                onChange={e=>updateVariantField(index, 'stockQuantity', e.target.value)} 
+                                className="w-full p-2 border border-slate-100 rounded-lg text-xs focus:outline-none font-bold" 
+                                required
+                              />
+                            </td>
+                            <td className="p-2">
+                              <input 
+                                type="number" 
+                                placeholder="Cost" 
+                                value={v.buyingPrice} 
+                                onChange={e=>updateVariantField(index, 'buyingPrice', e.target.value)} 
+                                className="w-full p-2 border border-slate-100 rounded-lg text-xs focus:outline-none font-semibold text-slate-600" 
+                                required
+                              />
+                            </td>
+                            <td className="p-2">
+                              <input 
+                                type="number" 
+                                placeholder="Retail" 
+                                value={v.sellingPrice} 
+                                onChange={e=>updateVariantField(index, 'sellingPrice', e.target.value)} 
+                                className="w-full p-2 border border-slate-100 rounded-lg text-xs focus:outline-none font-semibold text-klader-burgundy" 
+                                required
+                              />
+                            </td>
+                            <td className="p-2">
+                              <input 
+                                type="text" 
+                                placeholder="Generated SKU" 
+                                value={v.sku} 
+                                onChange={e=>updateVariantField(index, 'sku', e.target.value)} 
+                                className="w-full p-2 border border-slate-100 rounded-lg text-xs focus:outline-none font-mono text-slate-500 bg-slate-50/50" 
+                                required
+                              />
+                            </td>
+                            <td className="p-2 text-center">
+                              {variants.length > 1 && (
+                                <button 
+                                  type="button" 
+                                  onClick={()=>handleRemoveVariantRow(index)}
+                                  className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg cursor-pointer transition-colors"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Color</label>
-                  <input type="text" placeholder="Navy / Maroon" value={formData.color} onChange={e=>setFormData({...formData, color: e.target.value})} className="w-full p-2.5 border border-slate-100 rounded-xl text-sm focus:outline-none" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Size Variation</label>
-                  <input type="text" placeholder="L / XL / Free" value={formData.size} onChange={e=>setFormData({...formData, size: e.target.value})} className="w-full p-2.5 border border-slate-100 rounded-xl text-sm focus:outline-none" />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Buying Price</label>
-                  <input type="number" placeholder="Cost" value={formData.buyingPrice} onChange={e=>setFormData({...formData, buyingPrice: parseFloat(e.target.value)})} className="w-full p-2.5 border border-slate-100 rounded-xl text-sm focus:outline-none font-semibold" required />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Selling Price</label>
-                  <input type="number" placeholder="Retail" value={formData.sellingPrice} onChange={e=>setFormData({...formData, sellingPrice: parseFloat(e.target.value)})} className="w-full p-2.5 border border-slate-100 rounded-xl text-sm focus:outline-none font-semibold text-klader-burgundy" required />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Stock Quantity</label>
-                  <input type="number" placeholder="Qty" value={formData.stockQuantity} onChange={e=>setFormData({...formData, stockQuantity: parseInt(e.target.value)})} className="w-full p-2.5 border border-slate-100 rounded-xl text-sm focus:outline-none font-bold" required />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Supplier Name</label>
-                <input type="text" placeholder="e.g. Dhaka Fabrics" value={formData.supplierName} onChange={e=>setFormData({...formData, supplierName: e.target.value})} className="w-full p-2.5 border border-slate-100 rounded-xl text-sm focus:outline-none" />
-              </div>
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-50">
-                <button type="button" onClick={()=>setShowAddModal(false)} className="px-4 py-2 border border-slate-100 rounded-xl text-xs font-semibold hover:bg-slate-50 cursor-pointer">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-klader-burgundy text-white rounded-xl text-xs font-semibold cursor-pointer">Save Product</button>
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button 
+                  type="button" 
+                  onClick={()=>setShowAddModal(false)} 
+                  className="px-4 py-2 border border-slate-100 rounded-xl text-xs font-semibold hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="px-4 py-2 bg-klader-burgundy text-white rounded-xl text-xs font-semibold cursor-pointer transition-all hover:shadow-lg hover:shadow-klader-burgundy/10"
+                >
+                  Save Product & Variants
+                </button>
               </div>
             </form>
           </div>
