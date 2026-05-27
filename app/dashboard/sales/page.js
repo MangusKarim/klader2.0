@@ -30,7 +30,7 @@ export default function SalesPage() {
   // Forms
   const [formData, setFormData] = useState({
     customerName: '', customerPhone: '', customerAddress: '',
-    productId: '', quantity: 1, sellingPrice: 0,
+    productId: '', color: '', size: '', quantity: 1, sellingPrice: 0,
     isPrinted: false, printSize: 'A4', printCost: 0,
     deliveryCharge: 120, advancePayment: 0,
     paymentMethod: 'bKash', paymentStatus: 'Unpaid', deliveryStatus: 'Pending'
@@ -38,7 +38,7 @@ export default function SalesPage() {
 
   const [editFormData, setEditFormData] = useState({
     id: '', customerName: '', customerPhone: '', customerAddress: '',
-    productId: '', quantity: 1, sellingPrice: 0,
+    productId: '', color: '', size: '', quantity: 1, sellingPrice: 0,
     isPrinted: false, printSize: 'A4', printCost: 0,
     deliveryCharge: 120, advancePayment: 0,
     paymentMethod: 'bKash', paymentStatus: 'Unpaid', deliveryStatus: 'Pending'
@@ -91,13 +91,17 @@ export default function SalesPage() {
       setEditFormData({
         ...editFormData,
         productId: prodId,
-        sellingPrice: selectedProd.sellingPrice
+        sellingPrice: selectedProd.sellingPrice,
+        color: selectedProd.color || '',
+        size: selectedProd.size || ''
       });
     } else {
       setFormData({
         ...formData,
         productId: prodId,
-        sellingPrice: selectedProd.sellingPrice
+        sellingPrice: selectedProd.sellingPrice,
+        color: selectedProd.color || '',
+        size: selectedProd.size || ''
       });
     }
   };
@@ -116,7 +120,7 @@ export default function SalesPage() {
         setShowAddModal(false);
         setFormData({
           customerName: '', customerPhone: '', customerAddress: '',
-          productId: '', quantity: 1, sellingPrice: 0,
+          productId: '', color: '', size: '', quantity: 1, sellingPrice: 0,
           isPrinted: false, printSize: 'A4', printCost: 0,
           deliveryCharge: 120, advancePayment: 0,
           paymentMethod: 'bKash', paymentStatus: 'Unpaid', deliveryStatus: 'Pending'
@@ -356,7 +360,8 @@ export default function SalesPage() {
                                 onClick={() => {
                                   setEditFormData({
                                     id: o.id, customerName: o.customerName, customerPhone: o.customerPhone,
-                                    customerAddress: o.customerAddress, productId: o.productId, quantity: o.quantity,
+                                    customerAddress: o.customerAddress, productId: o.productId,
+                                    color: o.color || '', size: o.size || '', quantity: o.quantity,
                                     sellingPrice: o.sellingPrice, isPrinted: o.isPrinted, printSize: o.printSize || 'A4',
                                     printCost: o.printCost || 0, deliveryCharge: o.deliveryCharge,
                                     advancePayment: o.advancePayment, paymentMethod: o.paymentMethod,
@@ -429,6 +434,17 @@ export default function SalesPage() {
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Quantity</label>
                   <input type="number" min="1" value={formData.quantity} onChange={e=>setFormData({...formData, quantity: parseInt(e.target.value)})} className="w-full p-2.5 border border-slate-100 rounded-xl text-sm focus:outline-none font-bold" required />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Customer Preferred Color</label>
+                  <input type="text" placeholder="e.g. Black / Navy" value={formData.color} onChange={e=>setFormData({...formData, color: e.target.value})} className="w-full p-2.5 border border-slate-100 rounded-xl text-sm focus:outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Customer Preferred Size</label>
+                  <input type="text" placeholder="e.g. L / XL / M" value={formData.size} onChange={e=>setFormData({...formData, size: e.target.value})} className="w-full p-2.5 border border-slate-100 rounded-xl text-sm focus:outline-none" />
                 </div>
               </div>
 
@@ -549,6 +565,17 @@ export default function SalesPage() {
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Quantity</label>
                   <input type="number" min="1" value={editFormData.quantity} onChange={e=>setEditFormData({...editFormData, quantity: parseInt(e.target.value)})} className="w-full p-2.5 border border-slate-100 rounded-xl text-sm focus:outline-none font-bold" required />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Customer Preferred Color</label>
+                  <input type="text" value={editFormData.color} onChange={e=>setEditFormData({...editFormData, color: e.target.value})} className="w-full p-2.5 border border-slate-100 rounded-xl text-sm focus:outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Customer Preferred Size</label>
+                  <input type="text" value={editFormData.size} onChange={e=>setEditFormData({...editFormData, size: e.target.value})} className="w-full p-2.5 border border-slate-100 rounded-xl text-sm focus:outline-none" />
                 </div>
               </div>
 

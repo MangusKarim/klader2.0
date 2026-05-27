@@ -36,7 +36,7 @@ export async function POST(request) {
     const body = await request.json();
     const { 
       customerName, customerPhone, customerAddress, 
-      productId, quantity, sellingPrice, 
+      productId, color, size, quantity, sellingPrice, 
       isPrinted, printSize, printCost, 
       deliveryCharge, advancePayment, paymentMethod, paymentStatus, deliveryStatus 
     } = body;
@@ -86,8 +86,8 @@ export async function POST(request) {
       customerAddress: customerAddress || '',
       productId,
       productName: product.name,
-      color: product.color,
-      size: product.size,
+      color: color || product.color,
+      size: size || product.size,
       quantity: qty,
       sellingPrice: sellPrice,
       isPrinted: !!isPrinted,
@@ -142,7 +142,7 @@ export async function PUT(request) {
     const body = await request.json();
     const { 
       id, customerName, customerPhone, customerAddress, 
-      productId, quantity, sellingPrice, 
+      productId, color, size, quantity, sellingPrice, 
       isPrinted, printSize, printCost, 
       deliveryCharge, advancePayment, paymentMethod, paymentStatus, deliveryStatus 
     } = body;
@@ -219,8 +219,8 @@ export async function PUT(request) {
       customerAddress: customerAddress !== undefined ? customerAddress : existingOrder.customerAddress,
       productId: targetProductId,
       productName: targetProduct.name,
-      color: targetProduct.color,
-      size: targetProduct.size,
+      color: color !== undefined ? color : existingOrder.color,
+      size: size !== undefined ? size : existingOrder.size,
       quantity: finalQty,
       sellingPrice: sellPrice,
       isPrinted: finalIsPrinted,
