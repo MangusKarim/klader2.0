@@ -171,6 +171,26 @@ export default function SalesPage() {
     }
   };
 
+  // Update Sales Order Status Inline
+  const handleUpdateStatus = async (orderId, updates) => {
+    try {
+      const res = await fetch('/api/sales', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, ...updates })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        fetchData();
+      } else {
+        alert(data.error || 'Failed to update order status');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error updating status.');
+    }
+  };
+
   // Print invoice helper
   const handlePrint = () => {
     window.print();
@@ -323,24 +343,59 @@ export default function SalesPage() {
                         <p className={`font-semibold mt-0.5 ${o.remainingDue > 0 ? 'text-red-500' : 'text-slate-400'}`}>{formatBDT(o.remainingDue)}</p>
                       </td>
                       <td className="py-3.5">
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                          o.deliveryStatus === 'Delivered' ? 'bg-emerald-50 text-emerald-800' :
-                          o.deliveryStatus === 'Cancelled' ? 'bg-red-50 text-red-800' :
-                          o.deliveryStatus === 'Shipped' ? 'bg-indigo-50 text-indigo-800' :
-                          'bg-amber-50 text-amber-800'
-                        }`}>
-                          {o.deliveryStatus}
-                        </span>
+                        {user.role === 'admin' || user.role === 'staff' || user.permissions?.salesAccess ? (
+                          <select
+                            value={o.deliveryStatus}
+                            onChange={(e) => handleUpdateStatus(o.id, { deliveryStatus: e.target.value })}
+                            className={`px-2 py-0.5 rounded-full text-[9px] font-bold border border-transparent focus:outline-none focus:border-slate-300 cursor-pointer transition-colors ${
+                              o.deliveryStatus === 'Delivered' ? 'bg-emerald-50 text-emerald-800' :
+                              o.deliveryStatus === 'Cancelled' ? 'bg-red-50 text-red-800' :
+                              o.deliveryStatus === 'Shipped' ? 'bg-indigo-50 text-indigo-800' :
+                              'bg-amber-50 text-amber-800'
+                            }`}
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Processing">Processing</option>
+                            <option value="Shipped">Shipped</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
+                          </select>
+                        ) : (
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                            o.deliveryStatus === 'Delivered' ? 'bg-emerald-50 text-emerald-800' :
+                            o.deliveryStatus === 'Cancelled' ? 'bg-red-50 text-red-800' :
+                            o.deliveryStatus === 'Shipped' ? 'bg-indigo-50 text-indigo-800' :
+                            'bg-amber-50 text-amber-800'
+                          }`}>
+                            {o.deliveryStatus}
+                          </span>
+                        )}
                       </td>
                       <td className="py-3.5">
                         <div className="flex flex-col gap-0.5">
-                          <span className={`w-fit px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                            o.paymentStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800' :
-                            o.paymentStatus === 'Partial' ? 'bg-amber-100 text-amber-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {o.paymentStatus}
-                          </span>
+                          {user.role === 'admin' || user.role === 'staff' || user.permissions?.salesAccess ? (
+                            <select
+                              value={o.paymentStatus}
+                              onChange={(e) => handleUpdateStatus(o.id, { paymentStatus: e.target.value })}
+                              className={`w-fit px-2 py-0.5 rounded-full text-[9px] font-bold border border-transparent focus:outline-none focus:border-slate-300 cursor-pointer transition-colors ${
+                                o.paymentStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800' :
+                                o.paymentStatus === 'Partial' ? 'bg-amber-100 text-amber-800' :
+                                'bg-red-100 text-red-800'
+                              }`}
+                            >
+                              <option value="Unpaid">Unpaid</option>
+                              <option value="Partial">Partial</option>
+                              <option value="Paid">Paid</option>
+                            </select>
+                          ) : (
+                            <span className={`w-fit px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                              o.paymentStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800' :
+                              o.paymentStatus === 'Partial' ? 'bg-amber-100 text-amber-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {o.paymentStatus}
+                            </span>
+                          )}
                           <span className="text-[9px] text-slate-400 pl-1 capitalize">{o.paymentMethod}</span>
                         </div>
                       </td>
