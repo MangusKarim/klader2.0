@@ -1,0 +1,395 @@
+{
+  "users": [
+    {
+      "id": "usr_1",
+      "username": "Zadid",
+      "password": "$2b$10$uu4CnCJ8pwgiR7ovRLKgP.KgoqsMrCy/NbvXoquZfxe9pSntuWdfO",
+      "role": "admin",
+      "permissions": {
+        "fullAccess": true,
+        "salesAccess": true,
+        "viewAccess": true
+      },
+      "status": "active",
+      "createdAt": "2026-05-27T09:16:57.551Z"
+    },
+    {
+      "id": "usr_2",
+      "username": "partner_sajjad",
+      "password": "$2b$10$uu4CnCJ8pwgiR7ovRLKgP.r2D0xy809y6E1EhlgrtO.CxVFyukUEa",
+      "role": "partner",
+      "permissions": {
+        "fullAccess": true,
+        "salesAccess": true,
+        "viewAccess": true
+      },
+      "status": "active",
+      "createdAt": "2026-05-27T09:16:57.551Z"
+    },
+    {
+      "id": "usr_3",
+      "username": "staff_tamim",
+      "password": "$2b$10$uu4CnCJ8pwgiR7ovRLKgP.ynLtP5jp5XtUIN.htbhyolL4SDw0s1y",
+      "role": "staff",
+      "permissions": {
+        "fullAccess": false,
+        "salesAccess": true,
+        "viewAccess": true
+      },
+      "status": "active",
+      "createdAt": "2026-05-27T09:16:57.551Z"
+    },
+    {
+      "id": "usr_4",
+      "username": "viewer_rahim",
+      "password": "$2b$10$uu4CnCJ8pwgiR7ovRLKgP.zalbSYYV/tZ3VxSe16kCxUkPm.1nm6S",
+      "role": "viewer",
+      "permissions": {
+        "fullAccess": false,
+        "salesAccess": false,
+        "viewAccess": true
+      },
+      "status": "active",
+      "createdAt": "2026-05-27T09:16:57.551Z"
+    }
+  ],
+  "partners": [
+    {
+      "id": "part_1",
+      "name": "Zadid",
+      "phone": "01912345678",
+      "email": "zadid@klader.life",
+      "username": "Zadid",
+      "type": "Investor",
+      "investmentAmount": 1200000,
+      "ownershipPercentage": 60,
+      "totalWithdrawals": 150000,
+      "remainingBalance": 1050000,
+      "activityLog": [
+        {
+          "id": "act_1",
+          "action": "Initial Investment",
+          "amount": 1000000,
+          "date": "2026-01-10T10:00:00Z"
+        },
+        {
+          "id": "act_2",
+          "action": "Additional Investment",
+          "amount": 200000,
+          "date": "2026-03-15T11:30:00Z"
+        },
+        {
+          "id": "act_3",
+          "action": "Withdrawal",
+          "amount": 150000,
+          "date": "2026-05-01T14:00:00Z"
+        }
+      ],
+      "notes": "Main founder and principal investor."
+    },
+    {
+      "id": "part_2",
+      "name": "Sajjad Rahman",
+      "phone": "01712345678",
+      "email": "sajjad@klader.life",
+      "username": "partner_sajjad",
+      "type": "Investor",
+      "investmentAmount": 500000,
+      "ownershipPercentage": 25,
+      "totalWithdrawals": 50000,
+      "remainingBalance": 450000,
+      "activityLog": [
+        {
+          "id": "act_4",
+          "action": "Initial Investment",
+          "amount": 500000,
+          "date": "2026-01-15T12:00:00Z"
+        },
+        {
+          "id": "act_5",
+          "action": "Withdrawal",
+          "amount": 50000,
+          "date": "2026-04-10T09:00:00Z"
+        }
+      ],
+      "notes": "Active investing partner."
+    },
+    {
+      "id": "part_3",
+      "name": "Karim Alam",
+      "phone": "01812345678",
+      "email": "karim@klader.life",
+      "username": "partner_karim",
+      "type": "Silent Partner",
+      "investmentAmount": 300000,
+      "ownershipPercentage": 15,
+      "totalWithdrawals": 20000,
+      "remainingBalance": 280000,
+      "activityLog": [
+        {
+          "id": "act_6",
+          "action": "Initial Investment",
+          "amount": 300000,
+          "date": "2026-02-01T15:00:00Z"
+        },
+        {
+          "id": "act_7",
+          "action": "Withdrawal",
+          "amount": 20000,
+          "date": "2026-05-20T16:00:00Z"
+        }
+      ],
+      "notes": "Silent backing partner."
+    }
+  ],
+  "products": [
+    {
+      "id": "prod_1",
+      "name": "Royal Navy Velvet Punjabi",
+      "sku": "PNJ-VEL-001",
+      "category": "Punjabi",
+      "color": "Royal Navy",
+      "size": "L",
+      "buyingPrice": 1800,
+      "sellingPrice": 3500,
+      "stockQuantity": 85,
+      "supplierName": "Dhaka Fabrics Ltd.",
+      "dateAdded": "2026-05-10",
+      "status": "In Stock"
+    },
+    {
+      "id": "prod_2",
+      "name": "Crimson Silk Saree",
+      "sku": "SAR-SIL-002",
+      "category": "Saree",
+      "color": "Crimson Red",
+      "size": "Free",
+      "buyingPrice": 3200,
+      "sellingPrice": 6800,
+      "stockQuantity": 40,
+      "supplierName": "Rajshahi Silks",
+      "dateAdded": "2026-05-12",
+      "status": "In Stock"
+    },
+    {
+      "id": "prod_3",
+      "name": "Summer Cotton Kurti",
+      "sku": "KRT-COT-003",
+      "category": "Kurti",
+      "color": "Peach",
+      "size": "M",
+      "buyingPrice": 700,
+      "sellingPrice": 1600,
+      "stockQuantity": 150,
+      "supplierName": "Narsingdi Cotton Mills",
+      "dateAdded": "2026-05-15",
+      "status": "In Stock"
+    },
+    {
+      "id": "prod_4",
+      "name": "Premium Slate Charcoal Polo",
+      "sku": "POL-SLD-004",
+      "category": "Polo",
+      "color": "Slate Charcoal",
+      "size": "XL",
+      "buyingPrice": 450,
+      "sellingPrice": 1200,
+      "stockQuantity": 12,
+      "supplierName": "Gazipur Knitwear",
+      "dateAdded": "2026-05-18",
+      "status": "In Stock"
+    },
+    {
+      "id": "prod_5",
+      "name": "Embroidered Black Sherwani",
+      "sku": "SHR-BLK-005",
+      "category": "Sherwani",
+      "color": "Midnight Black",
+      "size": "XL",
+      "buyingPrice": 8500,
+      "sellingPrice": 18500,
+      "stockQuantity": 5,
+      "supplierName": "Mirpur Silk Emporium",
+      "dateAdded": "2026-05-20",
+      "status": "In Stock"
+    }
+  ],
+  "sales_orders": [
+    {
+      "id": "ord_1",
+      "customerName": "Asif Mahmud",
+      "customerPhone": "01711122233",
+      "customerAddress": "House 42, Road 11, Banani, Dhaka",
+      "productId": "prod_1",
+      "productName": "Royal Navy Velvet Punjabi",
+      "color": "Royal Navy",
+      "size": "L",
+      "quantity": 2,
+      "sellingPrice": 3500,
+      "isPrinted": true,
+      "printSize": "A4 Back",
+      "printCost": 350,
+      "deliveryCharge": 120,
+      "advancePayment": 2000,
+      "remainingDue": 5820,
+      "paymentStatus": "Partial",
+      "paymentMethod": "bKash",
+      "deliveryStatus": "Delivered",
+      "profit": 3100,
+      "date": "2026-05-15T10:30:00Z"
+    },
+    {
+      "id": "ord_2",
+      "customerName": "Nusrat Jahan",
+      "customerPhone": "01899887766",
+      "customerAddress": "Plot 15, Sector 4, Uttara, Dhaka",
+      "productId": "prod_2",
+      "productName": "Crimson Silk Saree",
+      "color": "Crimson Red",
+      "size": "Free",
+      "quantity": 1,
+      "sellingPrice": 6800,
+      "isPrinted": false,
+      "printSize": "",
+      "printCost": 0,
+      "deliveryCharge": 120,
+      "advancePayment": 6920,
+      "remainingDue": 0,
+      "paymentStatus": "Paid",
+      "paymentMethod": "Nagad",
+      "deliveryStatus": "Delivered",
+      "profit": 3600,
+      "date": "2026-05-18T14:20:00Z"
+    },
+    {
+      "id": "ord_3",
+      "customerName": "Tanvir Hossain",
+      "customerPhone": "01912341234",
+      "customerAddress": "Wari, Old Dhaka",
+      "productId": "prod_4",
+      "productName": "Premium Slate Charcoal Polo",
+      "color": "Slate Charcoal",
+      "size": "XL",
+      "quantity": 3,
+      "sellingPrice": 1200,
+      "isPrinted": false,
+      "printSize": "",
+      "printCost": 0,
+      "deliveryCharge": 80,
+      "advancePayment": 0,
+      "remainingDue": 3680,
+      "paymentStatus": "Unpaid",
+      "paymentMethod": "Cash",
+      "deliveryStatus": "Processing",
+      "profit": 2250,
+      "date": "2026-05-25T11:00:00Z"
+    },
+    {
+      "id": "ord_4",
+      "customerName": "Farhana Yasmin",
+      "customerPhone": "01555443322",
+      "customerAddress": "O.R. Nizam Road, Chittagong",
+      "productId": "prod_3",
+      "productName": "Summer Cotton Kurti",
+      "color": "Peach",
+      "size": "M",
+      "quantity": 5,
+      "sellingPrice": 1600,
+      "isPrinted": true,
+      "printSize": "Chest pocket",
+      "printCost": 150,
+      "deliveryCharge": 150,
+      "advancePayment": 4000,
+      "remainingDue": 4900,
+      "paymentStatus": "Partial",
+      "paymentMethod": "Rocket",
+      "deliveryStatus": "Shipped",
+      "profit": 4500,
+      "date": "2026-05-26T16:45:00Z"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "exp_1",
+      "category": "Online Boosting",
+      "amount": 15000,
+      "description": "Facebook & Instagram Eid campaign ads",
+      "date": "2026-05-05",
+      "paymentRecord": "bKash Merchant Payment"
+    },
+    {
+      "id": "exp_2",
+      "category": "Packaging",
+      "amount": 8500,
+      "description": "Premium magnetic gift boxes (100 pcs)",
+      "date": "2026-05-08",
+      "paymentRecord": "Cash"
+    },
+    {
+      "id": "exp_3",
+      "category": "Transport",
+      "amount": 6200,
+      "description": "Carton shipping from Gazipur factory to hub",
+      "date": "2026-05-12",
+      "paymentRecord": "Bank Transfer"
+    },
+    {
+      "id": "exp_4",
+      "category": "Salary",
+      "amount": 25000,
+      "description": "May Salary for Sales Manager Tamim",
+      "date": "2026-05-25",
+      "paymentRecord": "Bank Transfer"
+    },
+    {
+      "id": "exp_5",
+      "category": "Utilities",
+      "amount": 4000,
+      "description": "Office electricity & internet bill",
+      "date": "2026-05-26",
+      "paymentRecord": "Nagad"
+    }
+  ],
+  "requests": [
+    {
+      "id": "req_1",
+      "partnerId": "part_2",
+      "partnerName": "Sajjad Rahman",
+      "type": "Withdrawal",
+      "amount": 30000,
+      "status": "Pending",
+      "notes": "Emergency business cash withdrawal request.",
+      "createdAt": "2026-05-26T12:00:00Z",
+      "approvedBy": "",
+      "approvedAt": ""
+    },
+    {
+      "id": "req_2",
+      "partnerId": "part_3",
+      "partnerName": "Karim Alam",
+      "type": "Investment",
+      "amount": 100000,
+      "status": "Approved",
+      "notes": "Additional funding to expand winter collection stock.",
+      "createdAt": "2026-05-20T10:00:00Z",
+      "approvedBy": "Zadid",
+      "approvedAt": "2026-05-21T11:00:00Z"
+    }
+  ],
+  "activity_logs": [
+    {
+      "id": "log_1",
+      "username": "Zadid",
+      "role": "admin",
+      "action": "System Initialized",
+      "details": "Default seed data successfully populated",
+      "timestamp": "2026-05-27T15:00:00Z",
+      "deviceInfo": "Chrome / Windows 11"
+    }
+  ],
+  "settings": {
+    "companyName": "Klader",
+    "currency": "BDT",
+    "lastBackup": "2026-05-27T15:00:00Z"
+  }
+}

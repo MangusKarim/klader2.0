@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+
+  --color-klader-burgundy: #7b0a1c;
+  --color-klader-crimson: #b6142c;
+  --color-klader-peach: #e77e4e;
+  --color-klader-charcoal: #161f28;
+
+  --color-brand-primary: #7b0a1c;
+  --color-brand-accent: #b6142c;
+  --color-brand-highlight: #e77e4e;
+  --color-brand-dark: #161f28;
+  
+  --animate-fade-in-up: fade-in-up 0.4s ease-out forwards;
+  --animate-pulse-subtle: pulse-subtle 3s infinite ease-in-out;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+:root {
+  --background: #fdfdfd;
+  --foreground: #161f28;
+}
+
+.dark {
+  --background: #0f1319;
+  --foreground: #f3f4f6;
+}
+
+html,
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  scroll-behavior: smooth;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px 0 rgba(123, 10, 28, 0.04);
+}
+
+.dark .glass-panel {
+  background: rgba(22, 31, 40, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.02);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .glass-card {
+  background: rgba(26, 36, 47, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.15);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px 0 rgba(123, 10, 28, 0.06);
+}
+
+.dark .glass-card:hover {
+  box-shadow: 0 12px 28px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* Premium Gradient Highlight Layout */
+.gradient-bg-accent {
+  background: radial-gradient(circle at 10% 20%, rgba(231, 126, 78, 0.06) 0%, transparent 40%),
+              radial-gradient(circle at 90% 80%, rgba(182, 20, 44, 0.05) 0%, transparent 40%);
+}
+
+.dark .gradient-bg-accent {
+  background: radial-gradient(circle at 10% 20%, rgba(231, 126, 78, 0.03) 0%, transparent 45%),
+              radial-gradient(circle at 90% 80%, rgba(182, 20, 44, 0.03) 0%, transparent 45%);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(123, 10, 28, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(123, 10, 28, 0.3);
+}
+
+/* Print Utilities for Invoices and Reports */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  .print-card {
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    page-break-inside: avoid;
+  }
+}
